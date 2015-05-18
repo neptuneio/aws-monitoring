@@ -1,7 +1,7 @@
 #! /bin/bash
 
 ###############################################
-# Purpose       : This script checks for AWS CLI installation, sets up a custom metrics publishing directory and fetches the default monitoring scripts for an user to modify
+# Purpose       : This script checks for AWS CLI installation, sets up a custom metrics publishing directory and fetches the sample monitoring scripts
 # Usage         : Run this script on an ec2 instance from a location where you want to create the custom metrics publishing directory
 #
 # Dependencies  : AWS CLI needs to be installed (Refer to : http://docs.aws.amazon.com/cli/latest/userguide/installing.html#install-bundle-other-os)
@@ -15,13 +15,14 @@ NC='\033[0m' # No Color
 
 # Global variables
 MONITORING_SCRIPT_DIR='neptuneio_monitoring'
-USER_MONITORING_SCRIPTS_DIR="user_monitoring_scripts"
-USER_MONITORING_METRICS_LIST="metrics_list"
+METRIC_SCRIPTS_DIR="metric_scripts"
+METRICS_LIST_FILE="metrics_list"
 PUBLISHING_SCRIPT="publish_metrics.sh"
 CRONTAB_ADDER_OF_PUBLISHING_SCRIPT="add_publishing_script_to_crontab.sh"
-USER_PROCESS_MONITORING_SCRIPT="nginx_process_status.sh"
-USER_MEMORY_MONITORING_SCRIPT="memory_utilization.sh"
-USER_DISK_MONITORING_SCRIPT="disk_utilization.sh"
+PROCESS_MONITORING_METRIC_SCRIPT="nginx_process_status.sh"
+MEM_UTILIZATION_METRIC_SCRIPT="memory_utilization.sh"
+DISK_UTILIZATION_METRIC_SCRIPT="disk_utilization.sh"
+DOWNLOAD_URL="https://raw.githubusercontent.com/neptuneio/aws-monitoring/prod/src"
 
 # Check if AWS CLI is installed or not
 echo -e "\nChecking if AWS CLI is installed"
@@ -42,7 +43,7 @@ if which aws ; then
 
   # Check if AWS keys given have right AWS cloudwatch priveleges
   if aws cloudwatch --profile $AWS_PROFILE describe-alarms > /dev/null ; then
-    echo -e "AWS keys look good with right cloudwatch priveleges" > /dev/null
+    echo -e "AWS keys look good with right cloudwatch priveleges"
   else
     echo -e "\n${red}Your AWS keys don't seem to have right Cloudwatch priveleges. Please cross-check and rerun the command. Aborting${NC}\n"
     exit 1;
@@ -56,21 +57,21 @@ fi
 # Setup the directory structure
 echo -e "Setting up directory structure and copying basic monitoring scripts"
 
-# Only if already non-existent
-if [ ! -d  $MONITORING_SCRIPT_DIR/$USER_MONITORING_SCRIPTS_DIR ]; then
-  mkdir -p $MONITORING_SCRIPT_DIR/$USER_MONITORING_SCRIPTS_DIR
-  touch $MONITORING_SCRIPT_DIR/$USER_MONITORING_METRICS_LIST
+# Only if directory is non-existent
+if [ ! -d  $MONITORING_SCRIPT_DIR/$METRIC_SCRIPTS_DIR ]; then
+  mkdir -p $MONITORING_SCRIPT_DIR/$METRIC_SCRIPTS_DIR
+  touch $MONITORING_SCRIPT_DIR/$METRICS_LIST_FILE
 
   cd $MONITORING_SCRIPT_DIR
   # Copy the publishing script and its wrapper to add to crontab
-  curl -sS -O https://s3.amazonaws.com/prod-neptuneio-downloads/aws-monitoring-scripts/$PUBLISHING_SCRIPT
-  curl -sS -O https://s3.amazonaws.com/prod-neptuneio-downloads/aws-monitoring-scripts/$CRONTAB_ADDER_OF_PUBLISHING_SCRIPT
+  curl -sS -O $DOWNLOAD_URL/$PUBLISHING_SCRIPT
+  curl -sS -O $DOWNLOAD_URL/$CRONTAB_ADDER_OF_PUBLISHING_SCRIPT
 
   # Copy the default user monitoring scripts
-  cd $USER_MONITORING_SCRIPTS_DIR
-  curl -sS -O https://s3.amazonaws.com/prod-neptuneio-downloads/aws-monitoring-scripts/$USER_PROCESS_MONITORING_SCRIPT
-  curl -sS -O https://s3.amazonaws.com/prod-neptuneio-downloads/aws-monitoring-scripts/$USER_MEMORY_MONITORING_SCRIPT
-  curl -sS -O https://s3.amazonaws.com/prod-neptuneio-downloads/aws-monitoring-scripts/$USER_DISK_MONITORING_SCRIPT
+  cd $METRIC_SCRIPTS_DIR
+  curl -sS -O $DOWNLOAD_URL/$METRIC_SCRIPTS_DIR/$PROCESS_MONITORING_METRIC_SCRIPT
+  curl -sS -O $DOWNLOAD_URL/$METRIC_SCRIPTS_DIR/$MEM_UTILIZATION_METRIC_SCRIPT
+  curl -sS -O $DOWNLOAD_URL/$METRIC_SCRIPTS_DIR/$DISK_UTILIZATION_METRIC_SCRIPT
   cd ..
 
   # Ensure same AWS region and instance id details are used in publishing script
@@ -85,9 +86,8 @@ chmod -R 700 ./*
 # Next steps message to the user
 echo -e "\nDirectory setup :${green}Successful${NC}\n"
 echo -e "NEXT STEPS : \n"
-echo -e "1) You will find monitoring scripts in the directory: $MONITORING_SCRIPT_DIR/$USER_MONITORING_SCRIPTS_DIR . Please edit or copy them to create new ones. You can also delete default scripts which you dont want to use.\n"
-echo -e "2) The name of your monitoring script is the metric name under which metric_values will be pushed to cloudwatch. So name the scripts appropriately. For e.g : xyz_process_status.sh --> Metric name will be xyz_process_status \n"
-echo -e "3) Every monitoring script has usage guidelines inside to guide you on how to write your own custom script to publish metric values\n"
-echo -e "4) Once you are done with editing, run${green} $CRONTAB_ADDER_OF_PUBLISHING_SCRIPT ${NC}so that the publishing script will be added to crontab and default alarms are created on your metrics\n\n"
+echo -e "1) You will find sample metric scripts in the directory: $MONITORING_SCRIPT_DIR/$METRIC_SCRIPTS_DIR . Modify them or copy them to create new metric scripts\n"
+echo -e "2) The name of the metric script will be used as the metric name in cloudwatch. So name the scripts appropriately. For e.g : If your script name is xyz_process_status.sh, then your metric name will be xyz_process_status \n"
+echo -e "3) Finally, when you are done with creating your metric scripts, run${green} $CRONTAB_ADDER_OF_PUBLISHING_SCRIPT ${NC}so that the publishing script will be added to crontab and default alarms are created on your metrics\n\n"
 
 exit 0

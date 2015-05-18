@@ -15,12 +15,10 @@ NC='\033[0m' # No Color
 
 # Global variables
 MONITORING_SCRIPT_DIR='neptuneio_monitoring'
-USER_MONITORING_SCRIPTS_DIR="user_monitoring_scripts"
-USER_MONITORING_METRICS_LIST="metrics_list"
+METRIC_SCRIPTS_DIR="user_scripts"
+METRICS_LIST_FILE="metrics_list"
 PUBLISHING_SCRIPT="publish_metrics.sh"
-USER_PROCESS_MONITORING_SCRIPT="nginx_process_status.sh"
-USER_MEMORY_MONITORING_SCRIPT="memory_utilization.sh"
-USER_DISK_MONITORING_SCRIPT="disk_utilization.sh"
+
 
 # Run pushing script once to check everything is ok
 echo -e "\nTest run of the publishing script..."
