@@ -32,8 +32,8 @@ if which aws ; then
   # Create the Neptuneio profile of AWS keys
   echo -e "Adding your AWS keys to Neptuneio profile in ~/.aws"
   AWS_PROFILE="Neptuneio"
-  aws configure --profile $AWS_PROFILE set aws_access_key_id $AWS_ACCESS_KEY
-  aws configure --profile $AWS_PROFILE set aws_secret_access_key $AWS_SECRET_KEY
+  aws configure --profile $AWS_PROFILE set aws_access_key_id $AWS_NEPTUNEIO_ACCESS_KEY
+  aws configure --profile $AWS_PROFILE set aws_secret_access_key $AWS_NEPTUNEIO_SECRET_KEY
   # Get the instance ID
   HOST_INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
   # Get the AWS region of the instance to push the metrics to
