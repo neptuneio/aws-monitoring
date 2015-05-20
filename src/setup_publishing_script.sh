@@ -40,14 +40,6 @@ if which aws ; then
   AWS_REGION=`curl -s http://169.254.169.254/latest/dynamic/instance-identity/document|grep region|awk -F\" '{print $4}'`
   aws configure --profile $AWS_PROFILE set region $AWS_REGION
   aws configure --profile $AWS_PROFILE set output json
-
-  # Check if AWS keys given have right AWS cloudwatch priveleges
-  if aws cloudwatch --profile $AWS_PROFILE describe-alarms > /dev/null ; then
-    echo -e "AWS keys look good with right cloudwatch priveleges"
-  else
-    echo -e "\n${red}Your AWS keys don't seem to have right Cloudwatch priveleges. Please cross-check and rerun the command. Aborting${NC}\n"
-    exit 1;
-  fi
 else
   echo -e "${red}AWS CLI is not installed; ${NC} Please install AWS CLI using :\n\n wget https://bootstrap.pypa.io/get-pip.py \n sudo python get-pip.py \n sudo pip install awscli --upgrade\n"
   echo -e "Please rerun the same command that you have just run after installing AWS CLI\n"
@@ -84,10 +76,23 @@ fi
 chmod -R 700 ./*
 
 # Next steps message to the user
-echo -e "\nDirectory setup :${green}Successful${NC}\n"
-echo -e "NEXT STEPS : \n"
-echo -e "1) You will find sample metric scripts in the directory: $MONITORING_SCRIPT_DIR/$METRIC_SCRIPTS_DIR . Modify them or copy them to create new metric scripts\n"
-echo -e "2) The name of the metric script will be used as the metric name in cloudwatch. So name the scripts appropriately. For e.g : If your script name is xyz_process_status.sh, then your metric name will be xyz_process_status \n"
-echo -e "3) Finally, when you are done with creating your metric scripts, run${green} $CRONTAB_ADDER_OF_PUBLISHING_SCRIPT ${NC}so that the publishing script will be added to crontab and default alarms are created on your metrics\n\n"
 
+# Check if AWS keys given have right AWS cloudwatch priveleges
+if aws cloudwatch --profile $AWS_PROFILE describe-alarms > /dev/null ; then
+  echo -e "Your AWS keys look good with right cloudwatch priveleges"
+  echo -e "\nDirectory setup :${green}Successful${NC}\n"
+  echo -e "NEXT STEPS : \n"
+  echo -e "1) You will find sample metric scripts in the directory: $MONITORING_SCRIPT_DIR/$METRIC_SCRIPTS_DIR . Modify them or copy them to create new metric scripts\n"
+  echo -e "2) The name of the metric script will be used as the metric name in cloudwatch. So name the scripts appropriately. For e.g : If your script name is xyz_process_status.sh, then your metric name will be xyz_process_status \n"
+  echo -e "3) Finally, when you are done with creating your metric scripts, run${green} $CRONTAB_ADDER_OF_PUBLISHING_SCRIPT ${NC}so that the publishing script will be added to crontab and default alarms are created on your metrics\n\n"
+else
+  echo -e "\n${red}Your AWS keys don't seem to have right Cloudwatch priveleges. Please use right keys in ~/.aws/credentials and proceed with next steps listed below${NC}\n"
+  echo -e "NEXT STEPS : \n"
+  echo -e "1) You will find sample metric scripts in the directory: $MONITORING_SCRIPT_DIR/$METRIC_SCRIPTS_DIR . Modify them or copy them to create new metric scripts\n"
+  echo -e "2) The name of the metric script will be used as the metric name in cloudwatch. So name the scripts appropriately. For e.g : If your script name is xyz_process_status.sh, then your metric name will be xyz_process_status \n"
+  echo -e "3) Finally, when you are done with creating your metric scripts, run${green} $CRONTAB_ADDER_OF_PUBLISHING_SCRIPT ${NC}so that the publishing script will be added to crontab and default alarms are created on your metrics\n\n"
+  exit 1;
+fi
+
+# If all goes well exit cleanly
 exit 0
