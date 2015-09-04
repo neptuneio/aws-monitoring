@@ -20,7 +20,6 @@ from urlparse import urlparse
 
 __author__ = 'buchi'
 
-NEPTUNEIO_SNS_TOPIC = 'arn:aws:sns:us-east-1:414130290710:neptuneio-sns'
 HEALTH_CHECK_PERIOD = 60
 HEALTH_CHECK_EVALUATION_PERIODS = 2
 
@@ -68,8 +67,7 @@ def create_cloudwatch_alarm(cw, url, healthcheck_id):
     alarm_name = 'Neptune.io alarm for ' + url
     alarm = metrics[0].create_alarm(name=alarm_name, comparison='<', threshold=1, period=60,
                                     description='Alarm to notify if ' + url + ' is down',
-                                    evaluation_periods=HEALTH_CHECK_EVALUATION_PERIODS, statistic='Minimum',
-                                    alarm_actions=[NEPTUNEIO_SNS_TOPIC], ok_actions=[NEPTUNEIO_SNS_TOPIC])
+                                    evaluation_periods=HEALTH_CHECK_EVALUATION_PERIODS, statistic='Minimum')
     print("Successfully created alarm for URL: " + url)
 
 
